@@ -1,0 +1,2080 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AniTrack Pro — Interactive Anime Watch-Order & Filler Tracker</title>
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-card: #161c2c;
+      --bg-card-hover: #1c2438;
+      --bg-elevated: #222b42;
+      --border-color: #26314d;
+      --border-highlight: #384870;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-crimson: #e11d48;
+      --accent-crimson-glow: rgba(225, 29, 72, 0.25);
+      --accent-blue: #0ea5e9;
+      --accent-blue-glow: rgba(14, 165, 233, 0.25);
+      --accent-amber: #f59e0b;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-lg: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 12% 10%, rgba(225, 29, 72, 0.08), transparent 32%),
+        radial-gradient(circle at 88% 15%, rgba(14, 165, 233, 0.08), transparent 35%);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header & Top Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 13, 20, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-crimson), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #fff;
+      box-shadow: 0 4px 14px var(--accent-crimson-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      font-weight: 700;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    /* Series Switcher Tabs */
+    .series-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-secondary);
+      padding: 0.3rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .series-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .series-tab:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .series-tab.active {
+      background: linear-gradient(135deg, var(--accent-crimson), #be123c);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--accent-crimson-glow);
+    }
+
+    .tab-pill {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.25);
+      font-weight: 700;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 4rem;
+    }
+
+    /* Hero & Progress Dashboard */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 960px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .series-overview-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .series-overview-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-crimson), var(--accent-blue));
+    }
+
+    .series-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .series-title-group h2 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .series-meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .meta-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .series-description {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      margin-bottom: 1.25rem;
+      max-width: 78ch;
+    }
+
+    /* Progress Bar Section */
+    .progress-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.15rem;
+    }
+
+    .progress-stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .progress-percentage {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--accent-blue);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: var(--bg-primary);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      margin-bottom: 0.75rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-crimson), var(--accent-blue));
+      border-radius: 999px;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-substats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .progress-substats strong {
+      color: var(--text-primary);
+    }
+
+    /* Affiliate / Monetization Banner Card */
+    .affiliate-card {
+      background: linear-gradient(155deg, #171e31 0%, #101522 100%);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 1.35rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .sponsored-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-amber);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      width: fit-content;
+      margin-bottom: 0.75rem;
+    }
+
+    .affiliate-card h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      color: var(--text-primary);
+    }
+
+    .affiliate-card p {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.1rem;
+    }
+
+    .affiliate-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .btn-affiliate {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      padding: 0.68rem 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      font-weight: 700;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .btn-stream {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+    }
+
+    .btn-stream:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .btn-merch {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-highlight);
+    }
+
+    .btn-merch:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* Fate Series Route Switcher Banner */
+    .fate-route-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.12), rgba(14, 165, 233, 0.12));
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .fate-route-banner.visible {
+      display: block;
+    }
+
+    .fate-route-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .fate-route-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .route-toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: var(--bg-primary);
+      padding: 0.35rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .route-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .route-btn.active {
+      background: var(--accent-blue);
+      color: #081018;
+      box-shadow: 0 2px 10px var(--accent-blue-glow);
+    }
+
+    .fate-route-explanation {
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      background: rgba(10, 13, 20, 0.65);
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    /* Controls Bar: Search, Filters, Bulk Actions */
+    .controls-bar {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1 1 260px;
+      min-width: 220px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 0.95rem;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.65rem 2.2rem 0.65rem 2.4rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px var(--accent-blue-glow);
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      display: none;
+    }
+
+    .clear-search-btn.visible {
+      display: block;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.55rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--border-highlight);
+      color: var(--text-primary);
+    }
+
+    .filter-btn.active {
+      background: rgba(14, 165, 233, 0.16);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .utility-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .btn-util {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-util:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-util.danger:hover {
+      border-color: var(--accent-crimson);
+      color: var(--accent-crimson);
+    }
+
+    /* Legend & Quick Summary */
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding: 0 0.25rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .dot.canon { background: var(--accent-emerald); }
+    .dot.mixed { background: var(--accent-amber); }
+    .dot.filler { background: var(--accent-crimson); }
+    .dot.movie { background: var(--accent-purple); }
+
+    /* Saga Sections */
+    .saga-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .saga-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .saga-header {
+      padding: 1.1rem 1.35rem;
+      background: rgba(22, 28, 44, 0.7);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .saga-header:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .saga-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .saga-chevron {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      transition: transform 0.2s ease;
+    }
+
+    .saga-card.collapsed .saga-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .saga-card.collapsed .saga-body {
+      display: none;
+    }
+
+    .saga-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .saga-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .saga-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .saga-progress-pill {
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .saga-progress-pill.complete {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--accent-emerald);
+    }
+
+    .btn-saga-toggle {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-highlight);
+      color: var(--text-primary);
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-saga-toggle:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* Arc Rows */
+    .saga-body {
+      divide-y: 1px solid var(--border-color);
+    }
+
+    .arc-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.35rem;
+      border-bottom: 1px solid rgba(38, 49, 77, 0.55);
+      transition: var(--transition);
+    }
+
+    .arc-item:last-child {
+      border-bottom: none;
+    }
+
+    .arc-item:hover {
+      background: rgba(28, 36, 56, 0.55);
+    }
+
+    .arc-item.completed {
+      background: rgba(16, 185, 129, 0.04);
+    }
+
+    .arc-item.completed .arc-name {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    /* Custom Checkbox */
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .arc-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-highlight);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: var(--transition);
+    }
+
+    .arc-checkbox:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .arc-checkbox:checked {
+      background: var(--accent-emerald);
+      border-color: var(--accent-emerald);
+    }
+
+    .arc-checkbox:checked::before {
+      content: "✓";
+      color: #062117;
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .arc-main {
+      min-width: 0;
+    }
+
+    .arc-top-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .arc-order-num {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .arc-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      transition: var(--transition);
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.16rem 0.52rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+
+    .badge-canon {
+      background: rgba(16, 185, 129, 0.14);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-mixed {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .badge-filler {
+      background: rgba(225, 29, 72, 0.15);
+      color: #fb7185;
+      border-color: rgba(225, 29, 72, 0.35);
+    }
+
+    .badge-movie {
+      background: rgba(139, 92, 246, 0.16);
+      color: #c4b5fd;
+      border-color: rgba(139, 92, 246, 0.35);
+    }
+
+    .arc-details {
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+    }
+
+    .arc-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.6rem;
+    }
+
+    .ep-pill {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ep-count-tag {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .arc-stream-link {
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .arc-stream-link:hover {
+      background: var(--accent-blue);
+      color: #06121c;
+    }
+
+    @media (max-width: 680px) {
+      .arc-item {
+        grid-template-columns: auto 1fr;
+      }
+      .arc-right {
+        grid-column: 2;
+        justify-content: flex-start;
+        margin-top: 0.25rem;
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      background: var(--bg-secondary);
+      border: 1px dashed var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .empty-state h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2rem 1.25rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">AT</div>
+        <div class="brand-text">
+          <h1>AniTrack Pro <span class="brand-badge">Watch Order &amp; Filler Guide</span></h1>
+          <p>Zero-Spoiler Canon Tracker &amp; Persistent Progress Manager</p>
+        </div>
+      </div>
+
+      <nav class="series-tabs" id="seriesTabs" aria-label="Select Anime Series">
+        <button class="series-tab active" data-series="onepiece">
+          <span>🏴‍☠️ One Piece</span>
+          <span class="tab-pill" id="tabPct-onepiece">0%</span>
+        </button>
+        <button class="series-tab" data-series="naruto">
+          <span>🍥 Naruto &amp; Shippuden</span>
+          <span class="tab-pill" id="tabPct-naruto">0%</span>
+        </button>
+        <button class="series-tab" data-series="fate">
+          <span>⚔️ Fate Series</span>
+          <span class="tab-pill" id="tabPct-fate">0%</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top Dashboard: Overview + Progress + Affiliate Monetization Card -->
+    <section class="dashboard-grid">
+      <div class="series-overview-card">
+        <div class="series-header-row">
+          <div class="series-title-group">
+            <h2 id="seriesTitle">One Piece</h2>
+            <div class="series-meta-tags" id="seriesMetaTags"></div>
+          </div>
+        </div>
+        <p class="series-description" id="seriesDescription"></p>
+
+        <div class="progress-panel">
+          <div class="progress-stats-row">
+            <span class="progress-label">
+              <span>📊 Overall Watch Completion</span>
+            </span>
+            <span class="progress-percentage" id="progressPercentage">0%</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="progressBarTrack">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-substats">
+            <span>Arcs Completed: <strong id="arcsStatText">0 / 0</strong></span>
+            <span>Episodes Logged: <strong id="episodesStatText">0 / 0</strong></span>
+            <span>Canon Completion: <strong id="canonStatText">0%</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Affiliate / Monetization Card -->
+      <aside class="affiliate-card" aria-label="Partner Streaming and Merch Links">
+        <div>
+          <span class="sponsored-tag">⚡ Official Partner Picks</span>
+          <h3 id="affiliateHeadline">Stream One Piece in 1080p HD</h3>
+          <p id="affiliateSubtext">Watch every canon saga simulcast or grab authentic figures, manga box sets, and heavyweight streetwear.</p>
+        </div>
+        <div class="affiliate-actions">
+          <a href="https://www.crunchyroll.com" target="_blank" rel="noopener noreferrer" class="btn-affiliate btn-stream" id="affiliateStreamBtn">
+            <span id="affiliateStreamLabel">▶ Stream This Series on Crunchyroll</span>
+            <span>↗</span>
+          </a>
+          <a href="https://store.crunchyroll.com" target="_blank" rel="noopener noreferrer" class="btn-affiliate btn-merch" id="affiliateMerchBtn">
+            <span id="affiliateMerchLabel">🛍️ Check Out Official Merch &amp; Box Sets</span>
+            <span>↗</span>
+          </a>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Fate Series Specific Route Toggle -->
+    <section class="fate-route-banner" id="fateRouteBanner">
+      <div class="fate-route-header">
+        <div class="fate-route-title">
+          <span>🧭 Fate Starting Route Selector:</span>
+        </div>
+        <div class="route-toggle-group" role="tablist" aria-label="Fate Watch Order Route">
+          <button class="route-btn active" id="routeBtnUbw" data-route="ubw">
+            Recommended: Unlimited Blade Works First (Mystery Order)
+          </button>
+          <button class="route-btn" id="routeBtnZero" data-route="zero">
+            Chronological: Fate/Zero First (Timeline Order)
+          </button>
+        </div>
+      </div>
+      <div class="fate-route-explanation" id="fateRouteExplanation">
+        <strong>Why start with Unlimited Blade Works?</strong> In the original visual novel, you learn the rules of the Holy Grail War alongside Shirou Emiya. Starting with <em>Unlimited Blade Works</em> and the <em>Heaven's Feel</em> movie trilogy preserves major plot twists about Sakura, Illya, and Kirei Kotomine before watching the prequel tragedy <em>Fate/Zero</em>.
+      </div>
+    </section>
+
+    <!-- Filter & Search Controls -->
+    <section class="controls-bar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Search arc, saga, movie, or episode number (e.g. 'Marineford', 'Pain', '1015')..."
+          aria-label="Search arcs or movies"
+        />
+        <button class="clear-search-btn" id="clearSearchBtn" title="Clear Search">✕</button>
+      </div>
+
+      <div class="filter-group" role="group" aria-label="Filter Arcs">
+        <button class="filter-btn active" id="filterAllBtn" data-filter="all">
+          Show All
+        </button>
+        <button class="filter-btn" id="filterCanonBtn" data-filter="canon">
+          ✨ Canon Only (Hide Filler)
+        </button>
+        <button class="filter-btn" id="filterHideCompletedBtn">
+          👁️ Hide Completed
+        </button>
+      </div>
+
+      <div class="utility-actions">
+        <button class="btn-util" id="markAllCanonBtn" title="Mark all canon arcs in current series as watched">
+          ✓ Check All Canon
+        </button>
+        <button class="btn-util danger" id="resetSeriesBtn" title="Reset progress for current series">
+          ↺ Reset Series
+        </button>
+      </div>
+    </section>
+
+    <!-- Legend -->
+    <div class="legend-bar">
+      <div class="legend-items">
+        <span class="legend-item"><span class="dot canon"></span> <strong>Manga/VN Canon:</strong> Essential story</span>
+        <span class="legend-item"><span class="dot mixed"></span> <strong>Mixed Canon/Filler:</strong> Canon core with padded scenes</span>
+        <span class="legend-item"><span class="dot filler"></span> <strong>Filler / Spin-Off:</strong> Safe to skip</span>
+        <span class="legend-item"><span class="dot movie"></span> <strong>Movie / Special:</strong> Theatrical or OVA entry</span>
+      </div>
+      <div id="visibleCountSummary">Showing all arcs</div>
+    </div>
+
+    <!-- Sagas & Arcs Container -->
+    <section class="saga-list" id="sagaListContainer"></section>
+  </main>
+
+  <footer>
+    <p>AniTrack Pro — 100% Client-Side Serverless Watch-Order Tracker • Progress auto-saved locally in your browser.</p>
+  </footer>
+
+  <script>
+    /*************************************************************************
+     * COMPLETE PRELOADED ANIME DATABASE
+     * 1. One Piece (East Blue through Final Saga / Egghead)
+     * 2. Naruto & Naruto Shippuden (Full Chronological Order + Canon Movie)
+     * 3. Fate Series (Dynamic Route Toggle: UBW Start vs. Fate/Zero Start)
+     *************************************************************************/
+    const ANIME_DATA = {
+      onepiece: {
+        id: "onepiece",
+        title: "One Piece",
+        meta: ["1999–Present", "1122+ Episodes", " ~9% Filler Ratio", "Studio: Toei Animation"],
+        description:
+          "Follow Monkey D. Luffy and the Straw Hat Pirates across the Grand Line in search of the ultimate treasure, the One Piece. While One Piece has a low pure-filler percentage compared to other long-running shonen, skipping non-canon arcs (except the legendary G-8 Arc) saves over 95 episodes.",
+        affiliate: {
+          headline: "Stream One Piece in Full HD on Crunchyroll",
+          subtext: "Watch every saga from Romance Dawn to Egghead ad-free, or shop official Gear 5 figures & Manga Box Sets.",
+          streamLabel: "▶ Stream One Piece on Crunchyroll",
+          streamUrl: "https://www.crunchyroll.com/series/GRMG8ZQZR/one-piece",
+          merchLabel: "👒 Shop Official Straw Hat Merch & Box Sets",
+          merchUrl: "https://store.crunchyroll.com"
+        },
+        sagas: [
+          {
+            id: "op-east-blue",
+            title: "Saga 1: East Blue Saga",
+            subtitle: "Episodes 1–61 • The Straw Hat Crew Forms",
+            arcs: [
+              { id: "op-1", name: "Romance Dawn Arc", eps: "Eps 1–3", count: 3, type: "canon", note: "Luffy sets sail, meets Koby, and recruits Roronoa Zoro." },
+              { id: "op-2", name: "Orange Town Arc", eps: "Eps 4–8", count: 5, type: "canon", note: "Introduction of Nami and battle against Buggy the Clown." },
+              { id: "op-3", name: "Syrup Village Arc", eps: "Eps 9–18", count: 10, type: "canon", note: "Usopp joins the crew and the Straw Hats acquire the Going Merry." },
+              { id: "op-4", name: "Baratie Arc", eps: "Eps 19–30", count: 12, type: "canon", note: "Sanji joins; Zoro faces Dracule Mihawk in a legendary duel." },
+              { id: "op-5", name: "Arlong Park Arc", eps: "Eps 31–44", count: 14, type: "canon", note: "Nami's backstory and the iconic walk to Arlong Park." },
+              { id: "op-6", name: "Buggy's Crew Adventure Chronicles", eps: "Eps 45–47", count: 3, type: "canon", note: "Adapted directly from Oda's manga cover story." },
+              { id: "op-7", name: "Loguetown Arc", eps: "Eps 48–53", count: 6, type: "mixed", note: "Town of the beginning and the end. Includes canon story + Oda's cut novel scenes." },
+              { id: "op-8", name: "Warship Island Arc", eps: "Eps 54–61", count: 8, type: "filler", note: "First anime filler arc featuring Apis and the Millennium Dragon. Note: Final minutes of Ep 61 are canon entry to Reverse Mountain." }
+            ]
+          },
+          {
+            id: "op-alabasta",
+            title: "Saga 2: Alabasta Saga",
+            subtitle: "Episodes 62–135 • Entering the Grand Line & Baroque Works",
+            arcs: [
+              { id: "op-9", name: "Reverse Mountain Arc", eps: "Eps 62–63", count: 2, type: "canon", note: "Entering the Grand Line, meeting Laboon and Crocus." },
+              { id: "op-10", name: "Whisky Peak Arc", eps: "Eps 64–67", count: 4, type: "canon", note: "Zoro vs. 100 bounty hunters; Princess Vivi's secret revealed." },
+              { id: "op-11", name: "Diary of Koby-Meppo", eps: "Eps 68–69", count: 2, type: "canon", note: "Manga cover story adaptation showing Koby and Helmeppo training under Garp." },
+              { id: "op-12", name: "Little Garden Arc", eps: "Eps 70–77", count: 8, type: "canon", note: "Prehistoric island featuring the giants Dorry and Brogy." },
+              { id: "op-13", name: "Drum Island Arc", eps: "Eps 78–91", count: 14, type: "canon", note: "Tony Tony Chopper joins the crew; first mention of the Will of D." },
+              { id: "op-14", name: "Alabasta Arc", eps: "Eps 92–130", count: 39, type: "canon", note: "Portgas D. Ace appears; showdown against Warlord Sir Crocodile (Eps 98–99 & 101–102 contain minor desert filler)." },
+              { id: "op-15", name: "Post-Alabasta Arc", eps: "Eps 131–135", count: 5, type: "filler", note: "Standalone character episodes focusing on individual Straw Hats." }
+            ]
+          },
+          {
+            id: "op-sky-island",
+            title: "Saga 3: Sky Island Saga",
+            subtitle: "Episodes 136–206 • Skypiea & The Golden Bell",
+            arcs: [
+              { id: "op-16", name: "Goat Island Arc", eps: "Eps 136–138", count: 3, type: "filler", note: "Skippable filler arc featuring Zenny." },
+              { id: "op-17", name: "Ruluka Island Arc", eps: "Eps 139–143", count: 5, type: "filler", note: "Rainbow Mist filler arc (final scene of Ep 143 leads into Jaya)." },
+              { id: "op-18", name: "Jaya Arc", eps: "Eps 144–152", count: 9, type: "canon", note: "Essential introduction to Blackbeard, Bellamy, and the Knock Up Stream." },
+              { id: "op-19", name: "Skypiea Arc", eps: "Eps 153–195", count: 43, type: "canon", note: "Adventure in the clouds against 'God' Enel and crucial Poneglyph lore." },
+              { id: "op-20", name: "G-8 Arc", eps: "Eps 196–206", count: 11, type: "filler", note: "Widely considered the best filler arc in anime history—highly recommended even on canon runs." }
+            ]
+          },
+          {
+            id: "op-water-7",
+            title: "Saga 4: Water 7 / CP9 Saga",
+            subtitle: "Episodes 207–325 • Enies Lobby & Peak Crew Drama",
+            arcs: [
+              { id: "op-21", name: "Long Ring Long Land Arc", eps: "Eps 207–219", count: 13, type: "mixed", note: "Davy Back Fight with Foxy (padded with extra anime games) + crucial Admiral Aokiji encounter." },
+              { id: "op-22", name: "Ocean's Dream Arc", eps: "Eps 220–224", count: 5, type: "filler", note: "Crew loses their memories; safe to skip." },
+              { id: "op-23", name: "Foxy's Return Arc", eps: "Eps 225–228", count: 4, type: "mixed", note: "Eps 225–226 are filler; second half of 226 through 228 is canon Aokiji confrontation." },
+              { id: "op-24", name: "Water 7 Arc", eps: "Eps 229–263", count: 35, type: "canon", note: "Masterpiece arc: Usopp's duel, Robin's disappearance, and CP9 reveal." },
+              { id: "op-25", name: "Enies Lobby Arc", eps: "Eps 264–312", count: 49, type: "canon", note: "Gear 2 & 3 debut, 'I Want to Live!', and Lucci showdown (Skip Eps 279–283 & 291–292 recaps/specials)." },
+              { id: "op-26", name: "Post-Enies Lobby Arc", eps: "Eps 313–325", count: 13, type: "canon", note: "Thousand Sunny built, Franky joins, Shanks meets Whitebeard, Ace vs. Blackbeard (Eps 317–319 filler)." }
+            ]
+          },
+          {
+            id: "op-thriller-bark",
+            title: "Saga 5: Thriller Bark Saga",
+            subtitle: "Episodes 326–384 • Brook & Nothing Happened",
+            arcs: [
+              { id: "op-27", name: "Ice Hunter Arc", eps: "Eps 326–336", count: 11, type: "filler", note: "Accino Family bounty hunter filler arc." },
+              { id: "op-28", name: "Thriller Bark Arc", eps: "Eps 337–381", count: 45, type: "canon", note: "Gecko Moria, Brook joins, Bartholomew Kuma arrives, and Zoro's 'Nothing Happened'." },
+              { id: "op-29", name: "Spa Island Arc", eps: "Eps 382–384", count: 3, type: "filler", note: "Short resort filler arc." }
+            ]
+          },
+          {
+            id: "op-summit-war",
+            title: "Saga 6: Summit War (Paramount War) Saga",
+            subtitle: "Episodes 385–516 • Marineford & End of Part 1",
+            arcs: [
+              { id: "op-30", name: "Sabaody Archipelago Arc", eps: "Eps 385–405", count: 21, type: "canon", note: "The 11 Supernovas, Silvers Rayleigh, Celestial Dragons, and Kizaru's arrival." },
+              { id: "op-31", name: "Boss Luffy Historical Specials", eps: "Eps 406–407", count: 2, type: "filler", note: "Feudal Japan alternate-universe specials." },
+              { id: "op-32", name: "Amazon Lily Arc", eps: "Eps 408–421", count: 14, type: "canon", note: "Luffy lands on the Island of Women and meets Warlord Boa Hancock." },
+              { id: "op-33", name: "Impel Down Arc (Part 1)", eps: "Eps 422–425", count: 4, type: "canon", note: "Luffy infiltrates the Great Underwater Prison to rescue Ace." },
+              { id: "op-34", name: "Little East Blue Arc", eps: "Eps 426–429", count: 4, type: "filler", note: "Tie-in promotion for One Piece Film: Strong World." },
+              { id: "op-35", name: "Impel Down Arc (Part 2)", eps: "Eps 430–452", count: 23, type: "canon", note: "Jinbe, Ivankov, Crocodile, and Bon Clay team up for the mass breakout." },
+              { id: "op-36", name: "Straw Hat's Separation Serial", eps: "Eps 453–456", count: 4, type: "canon", note: "Canon cover stories showing where Kuma sent each crew member." },
+              { id: "op-37", name: "Marineford Arc", eps: "Eps 457–489", count: 33, type: "canon", note: "The War of the Best: Whitebeard Pirates vs. Navy HQ (Eps 457–458 are recap build-up)." },
+              { id: "op-38", name: "Post-War Arc", eps: "Eps 490–516", count: 27, type: "canon", note: "ASL childhood flashback (Luffy, Ace, Sabo) and the 3D2Y timeskip decision (Skip Ep 492 & 499)." }
+            ]
+          },
+          {
+            id: "op-fishman-island",
+            title: "Saga 7: Fish-Man Island Saga",
+            subtitle: "Episodes 517–574 • The Two-Year Timeskip Reunion",
+            arcs: [
+              { id: "op-39", name: "Return to Sabaody Arc", eps: "Eps 517–522", count: 6, type: "canon", note: "The Straw Hats reunite after 2 years of training and depart for the New World." },
+              { id: "op-40", name: "Fish-Man Island Arc", eps: "Eps 523–574", count: 52, type: "canon", note: "Fisher Tiger flashback, Joy Boy lore, Poseidon reveal (Skip Ep 542 Toriko crossover)." }
+            ]
+          },
+          {
+            id: "op-dressrosa",
+            title: "Saga 8: Dressrosa Pirate Alliance Saga",
+            subtitle: "Episodes 575–746 • Entering the New World & Doflamingo",
+            arcs: [
+              { id: "op-41", name: "Z's Ambition Arc", eps: "Eps 575–578", count: 4, type: "filler", note: "Prologue tie-in for One Piece Film: Z." },
+              { id: "op-42", name: "Punk Hazard Arc", eps: "Eps 579–625", count: 47, type: "canon", note: "Luffy & Trafalgar Law form their alliance; Kin'emon & Momonosuke introduced (Skip Ep 590 crossover)." },
+              { id: "op-43", name: "Caesar Retrieval Arc", eps: "Eps 626–628", count: 3, type: "filler", note: "Short filler arc between Punk Hazard and Dressrosa." },
+              { id: "op-44", name: "Dressrosa Arc", eps: "Eps 629–746", count: 118, type: "canon", note: "Law's backstory, Sabo's return, Grand Fleet formation, and Gear 4 vs. Donquixote Doflamingo." }
+            ]
+          },
+          {
+            id: "op-whole-cake",
+            title: "Saga 9: Whole Cake Island / Four Emperors Saga",
+            subtitle: "Episodes 747–889 • Zou, Sanji's Past & Emperor Big Mom",
+            arcs: [
+              { id: "op-45", name: "Silver Mine Arc", eps: "Eps 747–750", count: 4, type: "filler", note: "Tie-in arc for One Piece Film: Gold." },
+              { id: "op-46", name: "Zou Arc", eps: "Eps 751–779", count: 29, type: "canon", note: "Road Poneglyph revelation, Raizo is safe, and Ninja-Pirate-Mink-Samurai Alliance." },
+              { id: "op-47", name: "Marine Rookie Arc", eps: "Eps 780–782", count: 3, type: "filler", note: "Short food heist at a Marine base before Whole Cake Island." },
+              { id: "op-48", name: "Whole Cake Island Arc", eps: "Eps 783–877", count: 95, type: "canon", note: "Vinsmoke family drama, Sanji vs. Luffy, and Luffy vs. Charlotte Katakuri." },
+              { id: "op-49", name: "Levely (Reverie) Arc", eps: "Eps 878–889", count: 12, type: "mixed", note: "Major world leaders gather at Mary Geoise, Imu's debut (contains heavy flashback recaps)." }
+            ]
+          },
+          {
+            id: "op-wano",
+            title: "Saga 10: Wano Country Saga",
+            subtitle: "Episodes 890–1085 • Kozuki Oden, Onigashima Raid & Gear 5",
+            arcs: [
+              { id: "op-50", name: "Wano Country Arc — Act 1 & Act 2", eps: "Eps 890–958", count: 69, type: "canon", note: "Upgraded animation style; Luffy enters Wano (Skip Eps 895–896 Stampede filler & Ep 907 special)." },
+              { id: "op-51", name: "Wano Country Arc — Oden's Flashback & Raid on Onigashima", eps: "Eps 959–1085", count: 127, type: "canon", note: "Oden & Roger's journey to Laugh Tale, Roof Piece, and Gear 5 awakening vs. Kaido (Skip Eps 1029–1030 Film Red tie-in)." }
+            ]
+          },
+          {
+            id: "op-final-saga",
+            title: "Saga 11: Final Saga",
+            subtitle: "Episodes 1086–1122+ • Egghead Island & The Truth of the World",
+            arcs: [
+              { id: "op-52", name: "Egghead Island Arc", eps: "Eps 1086–1122+", count: 37, type: "canon", note: "Dr. Vegapunk, Kuma's heartbreaking backstory, Shanks vs. Kid, Garp at Hachinosu, and the Five Elders." }
+            ]
+          }
+        ]
+      },
+
+      naruto: {
+        id: "naruto",
+        title: "Naruto & Naruto Shippuden",
+        meta: ["2002–2017", "720 Total Episodes + 1 Canon Movie", "~41% Filler Ratio", "Studio: Pierrot"],
+        description:
+          "The complete chronological journey of Naruto Uzumaki from Academy outcast to Hokage across both Naruto (220 eps) and Naruto Shippuden (500 eps). Because roughly 295 episodes are filler, using the 'Canon Only' filter cuts out massive filler blocks while preserving every essential battle.",
+        affiliate: {
+          headline: "Stream Naruto & Shippuden Uncut on Crunchyroll",
+          subtext: "Binge all canon arcs in Japanese sub or English dub, or pick up Akatsuki cloaks and Sasuke figures.",
+          streamLabel: "▶ Stream Naruto Shippuden on Crunchyroll",
+          streamUrl: "https://www.crunchyroll.com/series/GYQ4MW246/naruto-shippuden",
+          merchLabel: "🍥 Shop Official Hidden Leaf & Akatsuki Merch",
+          merchUrl: "https://store.crunchyroll.com"
+        },
+        sagas: [
+          {
+            id: "nar-part1-canon",
+            title: "Part I: Naruto — Core Canon Sagas",
+            subtitle: "Original Series Episodes 1–135 • Team 7 & Sasuke's Defection",
+            arcs: [
+              { id: "nar-1", name: "Prologue — Land of Waves Arc", eps: "Naruto Eps 1–19", count: 19, type: "canon", note: "Team 7 forms; iconic battle on the Great Naruto Bridge against Zabuza and Haku." },
+              { id: "nar-2", name: "Chunin Exams Arc", eps: "Naruto Eps 20–67", count: 48, type: "canon", note: "Forest of Death, Rock Lee vs. Gaara, and Orochimaru's debut (Ep 26 is a skippable recap)." },
+              { id: "nar-3", name: "Konoha Crush Arc", eps: "Naruto Eps 68–80", count: 13, type: "canon", note: "Orochimaru invades the Hidden Leaf; Hiruzen Sarutobi's final battle and Naruto vs. Gaara." },
+              { id: "nar-4", name: "Search for Tsunade Arc", eps: "Naruto Eps 81–100", count: 20, type: "canon", note: "Itachi & Kisame arrive in Konoha; Jiraiya trains Naruto in the Rasengan (Ep 97 is filler)." },
+              { id: "nar-5", name: "Land of Tea Escort Mission", eps: "Naruto Eps 101–106", count: 6, type: "filler", note: "Note: Ep 101 ('Gotta See! Kakashi-Sensei's True Face!') is a beloved comedy episode; 102–106 are skippable filler." },
+              { id: "nar-6", name: "Sasuke Recovery Mission Arc", eps: "Naruto Eps 107–135", count: 29, type: "canon", note: "Shikamaru leads the retrieval squad against the Sound Four, culminating in Naruto vs. Sasuke at the Final Valley." }
+            ]
+          },
+          {
+            id: "nar-part1-filler",
+            title: "Part I: Naruto — Post-Canon Filler Block",
+            subtitle: "Original Series Episodes 136–220 • Safe to Skip Until Ep 220 Finale",
+            arcs: [
+              { id: "nar-7", name: "Land of Rice Fields & Mizuki Tracking Missions", eps: "Naruto Eps 136–147", count: 12, type: "filler", note: "First wave of post-Sasuke filler missions (Last 10 mins of Ep 135 & Ep 141 have tiny canon transitions)." },
+              { id: "nar-8", name: "Bikochu, Raiga & Cursed Warrior Filler Missions", eps: "Naruto Eps 148–167", count: 20, type: "filler", note: "Standalone village missions; completely skippable." },
+              { id: "nar-9", name: "Kaima, Star Guard & Peddler Escort Missions", eps: "Naruto Eps 168–191", count: 24, type: "filler", note: "Extended filler block before the timeskip." },
+              { id: "nar-10", name: "Konoha Plans Recapture, Yakumo & Menma Arcs", eps: "Naruto Eps 192–215", count: 24, type: "filler", note: "Skippable filler episodes." },
+              { id: "nar-11", name: "Sunagakure Support Mission & Naruto's Departure", eps: "Naruto Eps 216–220", count: 5, type: "mixed", note: "Filler mission, EXCEPT watch the second half of Episode 220 where Naruto leaves the village with Jiraiya." }
+            ]
+          },
+          {
+            id: "nar-shippuden-1",
+            title: "Part II: Naruto Shippuden — Akatsuki Rising",
+            subtitle: "Shippuden Episodes 1–112 • Kazekage Rescue & Immortal Duo",
+            arcs: [
+              { id: "nar-12", name: "Kazekage Rescue Mission Arc", eps: "Shippuden Eps 1–32", count: 32, type: "canon", note: "Naruto returns after 2.5 years; Sakura & Chiyo vs. Sasori." },
+              { id: "nar-13", name: "Tenchi Bridge Reconnaissance Mission", eps: "Shippuden Eps 33–53", count: 21, type: "canon", note: "Sai & Yamato join Team 7; Four-Tails Naruto vs. Orochimaru and reunion with Sasuke." },
+              { id: "nar-14", name: "Twelve Guardian Ninja Arc", eps: "Shippuden Eps 54–71", count: 18, type: "filler", note: "Filler arc expanding on Asuma's past and Sora (Eps 54–56 include canon Wind Nature training)." },
+              { id: "nar-15", name: "Akatsuki Suppression Mission (Hidan & Kakuzu)", eps: "Shippuden Eps 72–88", count: 17, type: "canon", note: "Shikamaru's vengeance and Naruto's Rasenshuriken debut." },
+              { id: "nar-16", name: "Three-Tails' Appearance Arc", eps: "Shippuden Eps 89–112", count: 24, type: "filler", note: "Guren Crystal Style filler arc (First 10 mins of Ep 89 & final scene of Ep 112 are canon)." }
+            ]
+          },
+          {
+            id: "nar-shippuden-2",
+            title: "Part III: Naruto Shippuden — Itachi, Jiraiya & Pain's Assault",
+            subtitle: "Shippuden Episodes 113–196 • The Peak of Shippuden",
+            arcs: [
+              { id: "nar-17", name: "Itachi Pursuit Mission", eps: "Shippuden Eps 113–126", count: 14, type: "canon", note: "Sasuke absorbs Orochimaru, forms Hebi, and fights Deidara (Eps 119–120 are Kakashi Gaiden canon)." },
+              { id: "nar-18", name: "Tale of Jiraiya the Gallant", eps: "Shippuden Eps 127–133", count: 7, type: "canon", note: "Jiraiya infiltrates the Hidden Rain Village and faces Pain." },
+              { id: "nar-19", name: "Fated Battle Between Brothers", eps: "Shippuden Eps 134–143", count: 10, type: "canon", note: "Sasuke vs. Itachi Uchiha and Tobi's revelation of the truth behind the Uchiha Clan." },
+              { id: "nar-20", name: "Six-Tails Unleashed Arc", eps: "Shippuden Eps 144–151", count: 8, type: "filler", note: "Utakata filler arc." },
+              { id: "nar-21", name: "Pain's Assault (Invasion of Pain)", eps: "Shippuden Eps 152–175", count: 24, type: "canon", note: "Naruto learns Sage Mode, Pain destroys Konoha, and Minato appears." },
+              { id: "nar-22", name: "Past Arc: The Locus of Konoha", eps: "Shippuden Eps 176–196", count: 21, type: "filler", note: "Nostalgic Part 1 flashback fillers (First half of Ep 176 & end of 196 have brief canon scenes)." }
+            ]
+          },
+          {
+            id: "nar-shippuden-3",
+            title: "Part IV: Naruto Shippuden — Five Kage Summit & Fourth Great Ninja War",
+            subtitle: "Shippuden Episodes 197–393 • The World at War",
+            arcs: [
+              { id: "nar-23", name: "Five Kage Summit Arc", eps: "Shippuden Eps 197–214", count: 18, type: "canon", note: "Sasuke attacks the Five Kage Summit, fights Danzo, and Tobi declares the Fourth Shinobi World War." },
+              { id: "nar-24", name: "Fourth Shinobi World War: Countdown", eps: "Shippuden Eps 215–222", count: 8, type: "canon", note: "Killer Bee trains Naruto; Kabuto reveals his Edo Tensei army." },
+              { id: "nar-25", name: "Paradise Life on a Boat", eps: "Shippuden Eps 223–242", count: 20, type: "filler", note: "Sea voyage filler episodes." },
+              { id: "nar-26", name: "Nine-Tails Taming & Karmic Encounters", eps: "Shippuden Eps 243–256", count: 14, type: "canon", note: "Naruto battles Kurama with Kushina's help, Minato vs. Masked Man flashback, and Konan vs. Tobi." },
+              { id: "nar-27", name: "10th Anniversary Special Arc", eps: "Shippuden Eps 257–260", count: 4, type: "filler", note: "Recap specials." },
+              { id: "nar-28", name: "Fourth Shinobi World War: Confrontation", eps: "Shippuden Eps 261–289", count: 29, type: "canon", note: "Allied Shinobi Forces vs. Reanimated Legends (Skip filler Eps 271, 279–281, 284–289)." },
+              { id: "nar-29", name: "Power (Chikara) Arc", eps: "Shippuden Eps 290–295", count: 6, type: "filler", note: "High-budget movie-quality filler arc." },
+              { id: "nar-30", name: "Fourth Shinobi World War: Climax", eps: "Shippuden Eps 296–348", count: 53, type: "canon", note: "Madara Uchiha's arrival, Five Kage vs. Madara, Itachi & Sasuke vs. Kabuto, Obito reveal (Skip filler Eps 303–320)." },
+              { id: "nar-31", name: "Kakashi's Anbu Arc: Shinobi in the Darkness", eps: "Shippuden Eps 349–361", count: 13, type: "filler", note: "Well-regarded filler exploring Kakashi, Yamato, and Itachi's time in the ANBU." },
+              { id: "nar-32", name: "Birth of the Ten-Tails' Jinchuriki", eps: "Shippuden Eps 362–393", count: 32, type: "canon", note: "Reanimated Hokage join the war, Hashirama & Madara backstory, Juubito battle (Skip filler Eps 376–377, 388–390)." }
+            ]
+          },
+          {
+            id: "nar-shippuden-4",
+            title: "Part V: Naruto Shippuden — Kaguya, Final Battle & Epilogue",
+            subtitle: "Shippuden Episodes 394–500 + The Last Movie • The Grand Finale",
+            arcs: [
+              { id: "nar-33", name: "In Naruto's Footsteps: The Friends' Paths", eps: "Shippuden Eps 394–413", count: 20, type: "filler", note: "Timeskip Chunin Exam filler arc." },
+              { id: "nar-34", name: "Infinite Tsukuyomi — Canon Core", eps: "Shippuden Eps 414–426", count: 13, type: "canon", note: "Eight Gates Might Guy vs. Madara, Six Paths powers awaken (Skip filler Eps 416–417 & 422–423)." },
+              { id: "nar-35", name: "Infinite Tsukuyomi Dreams & Jiraiya's Ninja Scrolls", eps: "Shippuden Eps 427–450", count: 24, type: "filler", note: "Alternate-reality dream worlds inside the Infinite Tsukuyomi; safe to skip." },
+              { id: "nar-36", name: "Itachi Shinden Book: Light and Darkness", eps: "Shippuden Eps 451–458", count: 8, type: "mixed", note: "Canon light novel adaptation detailing Itachi's childhood and Shisui Uchiha (Ep 451 & 458 frame the war)." },
+              { id: "nar-37", name: "Kaguya Otsutsuki Strikes & Final Valley Rematch", eps: "Shippuden Eps 459–479", count: 21, type: "canon", note: "Team 7 seals Kaguya, followed by the legendary final battle between Naruto and Sasuke in Eps 476–478 (Skip filler 460–462, 464–468)." },
+              { id: "nar-38", name: "Childhood Arc", eps: "Shippuden Eps 480–483", count: 4, type: "filler", note: "Short character flashback vignettes." },
+              { id: "nar-39", name: "Sasuke's Story (Sunrise) & Shikamaru's Story", eps: "Shippuden Eps 484–493", count: 10, type: "canon", note: "Official post-war canon light novel adaptations." },
+              { id: "nar-40", name: "The Last: Naruto the Movie", eps: "Feature Film (112 mins)", count: 1, type: "movie", note: "100% Canon Movie written by Kishimoto. Watch right before Episode 494!" },
+              { id: "nar-41", name: "Hidden Leaf Story: The Perfect Day for a Wedding", eps: "Shippuden Eps 494–500", count: 7, type: "canon", note: "Canon novel adaptation celebrating Naruto and Hinata's wedding." }
+            ]
+          }
+        ]
+      },
+
+      fate: {
+        id: "fate",
+        title: "Fate Series (Type-Moon Universe)",
+        meta: ["2006–Present", "Mainline + Parallel Worlds", "Interactive Route Toggle", "Primary Studio: ufotable"],
+        description:
+          "The Fate universe centers on the Holy Grail War—a secret battle royale between seven Masters and seven heroic spirits (Servants) from history and myth. Use the Route Selector below to switch between the Intended Mystery Order (Unlimited Blade Works first) and the Chronological Order (Fate/Zero first).",
+        affiliate: {
+          headline: "Stream the Fate Series in Blu-Ray Quality on Crunchyroll",
+          subtext: "Experience ufotable's legendary animation in Fate/Zero & Unlimited Blade Works, or collect Saber & Gilgamesh scale figures.",
+          streamLabel: "▶ Stream Fate/stay night & Fate/Zero on Crunchyroll",
+          streamUrl: "https://www.crunchyroll.com/series/GY8V11X7Y/fatestay-night-unlimited-blade-works",
+          merchLabel: "⚔️ Shop Official Type-Moon & Saber Figures",
+          merchUrl: "https://store.crunchyroll.com"
+        },
+        // Sagas will be dynamically constructed based on currentFateRoute ('ubw' vs 'zero')
+        sagas: []
+      }
+    };
+
+    /**
+     * Dynamically generates the Fate Series sagas in the user's chosen starting order.
+     */
+    function getFateSagas(routeMode) {
+      const ubwPrologue = {
+        id: "fate-ubw-0",
+        name: "Fate/stay night: Unlimited Blade Works — Prologue (Episode 0)",
+        eps: "Special (48 mins)",
+        count: 1,
+        type: "canon",
+        note: "Essential feature-length Episode 0 from Rin Tohsaka's perspective summoning Archer."
+      };
+      const ubwSeries = {
+        id: "fate-ubw-tv",
+        name: "Fate/stay night: Unlimited Blade Works (Seasons 1 & 2)",
+        eps: "Eps 1–25",
+        count: 25,
+        type: "canon",
+        note: "Ufotable's adaptation of the 2nd Visual Novel route focusing on Shirou Emiya, Rin Tohsaka, and Archer's ideals."
+      };
+      const hf1 = {
+        id: "fate-hf-1",
+        name: "Fate/stay night [Heaven's Feel] I. presage flower",
+        eps: "Movie 1 (120 mins)",
+        count: 1,
+        type: "movie",
+        note: "Part 1 of the dark 3rd route trilogy focusing on Sakura Matou and the true corrupted nature of the Grail."
+      };
+      const hf2 = {
+        id: "fate-hf-2",
+        name: "Fate/stay night [Heaven's Feel] II. lost butterfly",
+        eps: "Movie 2 (117 mins)",
+        count: 1,
+        type: "movie",
+        note: "Part 2 of the Heaven's Feel trilogy featuring Saber Alter vs. Berserker."
+      };
+      const hf3 = {
+        id: "fate-hf-3",
+        name: "Fate/stay night [Heaven's Feel] III. spring song",
+        eps: "Movie 3 (122 mins)",
+        count: 1,
+        type: "movie",
+        note: "Grand finale of the main Fate/stay night storyline."
+      };
+      const fateZero = {
+        id: "fate-zero-tv",
+        name: "Fate/Zero (Seasons 1 & 2)",
+        eps: "Eps 1–25",
+        count: 25,
+        type: "canon",
+        note: routeMode === "ubw"
+          ? "Watch after Heaven's Feel! Explores the brutal 4th Holy Grail War 10 years earlier with Kiritsugu Emiya, Saber, and Gilgamesh."
+          : "Chronological Starting Point: Set 10 years before Fate/stay night during the 4th Holy Grail War (Note: Spoils major Heaven's Feel family twists early)."
+      };
+      const elMelloi = {
+        id: "fate-elmelloi",
+        name: "Lord El-Melloi II's Case Files: {Rail Zeppelin} Grace note",
+        eps: "Ep 0 + Eps 1–13",
+        count: 14,
+        type: "canon",
+        note: "Canon mystery series following an adult Waver Velvet at the Clock Tower right before the 5th Grail War."
+      };
+      const deen2006 = {
+        id: "fate-deen-2006",
+        name: "Fate/stay night (2006 Studio DEEN Adaptation)",
+        eps: "Eps 1–24",
+        count: 24,
+        type: "mixed",
+        note: "Optional adaptation of the 1st ('Fate' / Saber) route. Dated animation and blends elements from other routes, but covers Saber's core romance."
+      };
+
+      const mainlineArcs =
+        routeMode === "ubw"
+          ? [ubwPrologue, ubwSeries, hf1, hf2, hf3, fateZero, elMelloi, deen2006]
+          : [fateZero, elMelloi, ubwPrologue, ubwSeries, hf1, hf2, hf3, deen2006];
+
+      return [
+        {
+          id: "fate-mainline",
+          title:
+            routeMode === "ubw"
+              ? "Phase 1: Core Fuyuki Timeline — Intended Mystery Order (UBW First)"
+              : "Phase 1: Core Fuyuki Timeline — Chronological Order (Fate/Zero First)",
+          subtitle: "The Essential Holy Grail War Storyline (ufotable Mainline)",
+          arcs: mainlineArcs
+        },
+        {
+          id: "fate-grand-order",
+          title: "Phase 2: Fate/Grand Order Animated Timeline",
+          subtitle: "Standalone Singularity Saga • Watch in Order Below Anytime After Phase 1",
+          arcs: [
+            {
+              id: "fgo-first-order",
+              name: "Fate/Grand Order: First Order",
+              eps: "TV Movie (74 mins)",
+              count: 1,
+              type: "movie",
+              note: "Essential prologue introducing Chaldea, Ritsuka Fujimaru, and Mash Kyrielight in Singularity F."
+            },
+            {
+              id: "fgo-camelot",
+              name: "Fate/Grand Order: Divine Realm of the Round Table — Camelot (Movies 1 & 2)",
+              eps: "2 Feature Films",
+              count: 2,
+              type: "movie",
+              note: "Covers the Sixth Singularity (Wandering; Agateram & Paladin; Agateram) featuring Bedivere and the Knights of the Round Table."
+            },
+            {
+              id: "fgo-babylonia",
+              name: "Fate/Grand Order: Absolute Demonic Front — Babylonia",
+              eps: "Ep 0 + Eps 1–21",
+              count: 22,
+              type: "canon",
+              note: "High-budget adaptation of the Seventh Singularity led by Wise King Gilgamesh in ancient Mesopotamia."
+            },
+            {
+              id: "fgo-solomon",
+              name: "Fate/Grand Order: Final Singularity — Grand Temple of Time: Solomon",
+              eps: "Feature Film (94 mins)",
+              count: 1,
+              type: "movie",
+              note: "Epic conclusion to Part 1 of the Fate/Grand Order storyline."
+            }
+          ]
+        },
+        {
+          id: "fate-spinoffs",
+          title: "Phase 3: Parallel Worlds & Standalone Spin-Offs",
+          subtitle: "Alternate Timelines • Can Be Watched in Any Order After Phase 1",
+          arcs: [
+            {
+              id: "fate-strange-fake",
+              name: "Fate/strange Fake: Whispers of Dawn & TV Series",
+              eps: "Special + Series (13+ Eps)",
+              count: 14,
+              type: "canon",
+              note: "Explosive True & False Holy Grail War set in Snowfield, USA, featuring Gilgamesh and Enkidu."
+            },
+            {
+              id: "fate-apocrypha",
+              name: "Fate/Apocrypha",
+              eps: "Eps 1–25",
+              count: 25,
+              type: "canon",
+              note: "Alternate timeline featuring a 7v7 team war (Red Faction vs. Black Faction) with Jeanne d'Arc, Mordred, and Karna."
+            },
+            {
+              id: "fate-emiya-menu",
+              name: "Today's Menu for the Emiya Family",
+              eps: "Eps 1–13",
+              count: 13,
+              type: "filler",
+              note: "Wholesome ufotable cooking slice-of-life where all Servants and Masters live peacefully in Fuyuki."
+            },
+            {
+              id: "fate-extra",
+              name: "Fate/EXTRA Last Encore",
+              eps: "Eps 1–13",
+              count: 13,
+              type: "filler",
+              note: "Studio Shaft's surreal sequel to the Fate/Extra PSP game starring Nero Claudius."
+            },
+            {
+              id: "fate-kaleid",
+              name: "Fate/kaleid liner Prisma☆Illya (Seasons 1–4 + Movie: Oath Under Snow)",
+              eps: "42 Eps + 1 Movie",
+              count: 43,
+              type: "filler",
+              note: "Magical girl alternate universe; 'Oath Under Snow' movie is a dark fan-favorite standalone prequel."
+            }
+          ]
+        }
+      ];
+    }
+
+    /*************************************************************************
+     * APPLICATION STATE & PERSISTENCE (localStorage)
+     *************************************************************************/
+    const STORAGE_KEY_COMPLETED = "anitrack_pro_completed_arcs_v1";
+    const STORAGE_KEY_PREFS = "anitrack_pro_user_prefs_v1";
+
+    let completedArcs = new Set();
+    let appState = {
+      activeSeries: "onepiece",
+      fateRoute: "ubw", // 'ubw' or 'zero'
+      filterMode: "all", // 'all' or 'canon'
+      hideCompleted: false,
+      searchQuery: "",
+      collapsedSagas: {}
+    };
+
+    function loadStateFromStorage() {
+      try {
+        const savedCompleted = localStorage.getItem(STORAGE_KEY_COMPLETED);
+        if (savedCompleted) {
+          const parsed = JSON.parse(savedCompleted);
+          if (Array.isArray(parsed)) {
+            completedArcs = new Set(parsed);
+          }
+        }
+        const savedPrefs = localStorage.getItem(STORAGE_KEY_PREFS);
+        if (savedPrefs) {
+          const parsedPrefs = JSON.parse(savedPrefs);
+          appState = { ...appState, ...parsedPrefs, searchQuery: "" };
+        }
+      } catch (e) {
+        console.warn("Could not read from localStorage:", e);
+      }
+    }
+
+    function saveCompletedToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_COMPLETED, JSON.stringify([...completedArcs]));
+      } catch (e) {
+        console.warn("Could not save to localStorage:", e);
+      }
+    }
+
+    function savePrefsToStorage() {
+      try {
+        const prefsToSave = {
+          activeSeries: appState.activeSeries,
+          fateRoute: appState.fateRoute,
+          filterMode: appState.filterMode,
+          hideCompleted: appState.hideCompleted,
+          collapsedSagas: appState.collapsedSagas
+        };
+        localStorage.setItem(STORAGE_KEY_PREFS, JSON.stringify(prefsToSave));
+      } catch (e) {
+        console.warn("Could not save preferences:", e);
+      }
+    }
+
+    /*************************************************************************
+     * HELPER FUNCTIONS
+     *************************************************************************/
+    function getSagasForSeries(seriesKey) {
+      if (seriesKey === "fate") {
+        return getFateSagas(appState.fateRoute);
+      }
+      return ANIME_DATA[seriesKey].sagas;
+    }
+
+    function isArcCanonOrEssential(arc) {
+      return arc.type === "canon" || arc.type === "mixed" || arc.type === "movie";
+    }
+
+    function computeSeriesStats(seriesKey) {
+      const sagas = getSagasForSeries(seriesKey);
+      let totalArcs = 0;
+      let completedArcCount = 0;
+      let totalEpisodes = 0;
+      let completedEpisodes = 0;
+      let canonArcs = 0;
+      let completedCanonArcs = 0;
+
+      sagas.forEach((saga) => {
+        saga.arcs.forEach((arc) => {
+          totalArcs++;
+          totalEpisodes += arc.count;
+          const isCanon = isArcCanonOrEssential(arc);
+          if (isCanon) canonArcs++;
+
+          if (completedArcs.has(arc.id)) {
+            completedArcCount++;
+            completedEpisodes += arc.count;
+            if (isCanon) completedCanonArcs++;
+          }
+        });
+      });
+
+      const overallPct = totalArcs > 0 ? Math.round((completedArcCount / totalArcs) * 100) : 0;
+      const canonPct = canonArcs > 0 ? Math.round((completedCanonArcs / canonArcs) * 100) : 0;
+
+      return {
+        totalArcs,
+        completedArcCount,
+        totalEpisodes,
+        completedEpisodes,
+        canonArcs,
+        completedCanonArcs,
+        overallPct,
+        canonPct
+      };
+    }
+
+    function getBadgeMeta(type) {
+      switch (type) {
+        case "canon":
+          return { label: "Manga Canon", cls: "badge-canon" };
+        case "mixed":
+          return { label: "Mixed Canon", cls: "badge-mixed" };
+        case "filler":
+          return { label: "Skippable Filler", cls: "badge-filler" };
+        case "movie":
+          return { label: "Movie / OVA", cls: "badge-movie" };
+        default:
+          return { label: "Canon", cls: "badge-canon" };
+      }
+    }
+
+    /*************************************************************************
+     * UI RENDERING
+     *************************************************************************/
+    function updateAllTabPercentages() {
+      ["onepiece", "naruto", "fate"].forEach((key) => {
+        const stats = computeSeriesStats(key);
+        const pill = document.getElementById(`tabPct-${key}`);
+        if (pill) {
+          pill.textContent = `${stats.overallPct}%`;
+        }
+      });
+    }
+
+    function renderDashboard() {
+      const currentSeries = ANIME_DATA[appState.activeSeries];
+      const stats = computeSeriesStats(appState.activeSeries);
+
+      // Update Series Header & Meta
+      document.getElementById("seriesTitle").textContent = currentSeries.title;
+      const metaContainer = document.getElementById("seriesMetaTags");
+      metaContainer.innerHTML = currentSeries.meta
+        .map((m) => `<span class="meta-chip">${m}</span>`)
+        .join("");
+      document.getElementById("seriesDescription").textContent = currentSeries.description;
+
+      // Update Progress Bar
+      document.getElementById("progressPercentage").textContent = `${stats.overallPct}%`;
+      document.getElementById("progressFill").style.width = `${stats.overallPct}%`;
+      document.getElementById("arcsStatText").textContent = `${stats.completedArcCount} / ${stats.totalArcs}`;
+      document.getElementById("episodesStatText").textContent = `${stats.completedEpisodes} / ${stats.totalEpisodes}`;
+      document.getElementById("canonStatText").textContent = `${stats.canonPct}% (${stats.completedCanonArcs}/${stats.canonArcs})`;
+
+      // Update Affiliate Card
+      const aff = currentSeries.affiliate;
+      document.getElementById("affiliateHeadline").textContent = aff.headline;
+      document.getElementById("affiliateSubtext").textContent = aff.subtext;
+      document.getElementById("affiliateStreamLabel").textContent = aff.streamLabel;
+      document.getElementById("affiliateStreamBtn").href = aff.streamUrl;
+      document.getElementById("affiliateMerchLabel").textContent = aff.merchLabel;
+      document.getElementById("affiliateMerchBtn").href = aff.merchUrl;
+
+      // Toggle Fate Route Banner visibility
+      const fateBanner = document.getElementById("fateRouteBanner");
+      if (appState.activeSeries === "fate") {
+        fateBanner.classList.add("visible");
+        const ubwBtn = document.getElementById("routeBtnUbw");
+        const zeroBtn = document.getElementById("routeBtnZero");
+        const expBox = document.getElementById("fateRouteExplanation");
+
+        if (appState.fateRoute === "ubw") {
+          ubwBtn.classList.add("active");
+          zeroBtn.classList.remove("active");
+          expBox.innerHTML =
+            "<strong>Why start with Unlimited Blade Works?</strong> In the original visual novel, you learn the rules of the Holy Grail War alongside Shirou Emiya. Starting with <em>Unlimited Blade Works</em> and the <em>Heaven's Feel</em> movie trilogy preserves major plot twists about Sakura, Illya, and Kirei Kotomine before watching the prequel tragedy <em>Fate/Zero</em>.";
+        } else {
+          zeroBtn.classList.add("active");
+          ubwBtn.classList.remove("active");
+          expBox.innerHTML =
+            "<strong>Why start with Fate/Zero?</strong> <em>Fate/Zero</em> takes place 10 years before <em>Fate/stay night</em> during the Fourth Holy Grail War. Watching it first gives you a strict chronological timeline and immediate context for Kiritsugu Emiya and Saber, though it reveals major late-game secrets from the <em>Heaven's Feel</em> trilogy right at the start.";
+        }
+      } else {
+        fateBanner.classList.remove("visible");
+      }
+
+      // Sync Filter Buttons
+      document.getElementById("filterAllBtn").classList.toggle("active", appState.filterMode === "all");
+      document.getElementById("filterCanonBtn").classList.toggle("active", appState.filterMode === "canon");
+      document.getElementById("filterHideCompletedBtn").classList.toggle("active", appState.hideCompleted);
+
+      updateAllTabPercentages();
+    }
+
+    function renderSagaList() {
+      const sagas = getSagasForSeries(appState.activeSeries);
+      const container = document.getElementById("sagaListContainer");
+      const query = appState.searchQuery.trim().toLowerCase();
+      const streamUrl = ANIME_DATA[appState.activeSeries].affiliate.streamUrl;
+
+      let globalArcIndex = 0;
+      let visibleArcsCount = 0;
+      let totalArcsInSeries = 0;
+
+      const htmlParts = [];
+
+      sagas.forEach((saga) => {
+        const sagaTotal = saga.arcs.length;
+        let sagaCompleted = 0;
+        saga.arcs.forEach((a) => {
+          totalArcsInSeries++;
+          if (completedArcs.has(a.id)) sagaCompleted++;
+        });
+
+        const filteredArcs = [];
+        saga.arcs.forEach((arc) => {
+          globalArcIndex++;
+          const arcNumber = globalArcIndex;
+          const isCompleted = completedArcs.has(arc.id);
+
+          // Apply Canon Only Filter
+          if (appState.filterMode === "canon" && arc.type === "filler") {
+            return;
+          }
+
+          // Apply Hide Completed Filter
+          if (appState.hideCompleted && isCompleted) {
+            return;
+          }
+
+          // Apply Instant Search Filter
+          if (query) {
+            const haystack = `${arc.name} ${arc.eps} ${arc.note} ${saga.title}`.toLowerCase();
+            if (!haystack.includes(query)) {
+              return;
+            }
+          }
+
+          filteredArcs.push({ arc, arcNumber, isCompleted });
+        });
+
+        if (filteredArcs.length === 0) {
+          return;
+        }
+
+        visibleArcsCount += filteredArcs.length;
+        const isSagaCollapsed = Boolean(appState.collapsedSagas[saga.id]) && !query;
+        const isAllSagaCompleted = sagaCompleted === sagaTotal && sagaTotal > 0;
+
+        const arcItemsHtml = filteredArcs
+          .map(({ arc, arcNumber, isCompleted }) => {
+            const badge = getBadgeMeta(arc.type);
+            const epUnit = arc.count === 1 ? "1 Entry" : `${arc.count} Eps`;
+
+            return `
+              <div class="arc-item ${isCompleted ? "completed" : ""}" data-arc-id="${arc.id}">
+                <label class="checkbox-label" title="Mark '${arc.name}' as watched">
+                  <input
+                    type="checkbox"
+                    class="arc-checkbox"
+                    data-arc-id="${arc.id}"
+                    ${isCompleted ? "checked" : ""}
+                  />
+                </label>
+
+                <div class="arc-main">
+                  <div class="arc-top-line">
+                    <span class="arc-order-num">#${String(arcNumber).padStart(2, "0")}</span>
+                    <span class="arc-name">${arc.name}</span>
+                    <span class="badge ${badge.cls}">${badge.label}</span>
+                  </div>
+                  <p class="arc-details">${arc.note}</p>
+                </div>
+
+                <div class="arc-right">
+                  <span class="ep-pill">${arc.eps}</span>
+                  <span class="ep-count-tag">(${epUnit})</span>
+                  <a
+                    href="${streamUrl}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="arc-stream-link"
+                    title="Stream ${arc.name} on Crunchyroll"
+                  >
+                    Stream ↗
+                  </a>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        htmlParts.push(`
+          <article class="saga-card ${isSagaCollapsed ? "collapsed" : ""}" data-saga-id="${saga.id}">
+            <div class="saga-header" data-saga-toggle="${saga.id}">
+              <div class="saga-title-wrap">
+                <span class="saga-chevron">▼</span>
+                <div>
+                  <h3 class="saga-title">${saga.title}</h3>
+                  <p class="saga-subtitle">${saga.subtitle}</p>
+                </div>
+              </div>
+              <div class="saga-controls">
+                <span class="saga-progress-pill ${isAllSagaCompleted ? "complete" : ""}">
+                  ${sagaCompleted} / ${sagaTotal} Completed
+                </span>
+                <button
+                  type="button"
+                  class="btn-saga-toggle"
+                  data-saga-batch="${saga.id}"
+                  title="Toggle all visible arcs in this saga"
+                >
+                  ${isAllSagaCompleted ? "Uncheck Saga" : "Check Saga"}
+                </button>
+              </div>
+            </div>
+            <div class="saga-body">
+              ${arcItemsHtml}
+            </div>
+          </article>
+        `);
+      });
+
+      if (htmlParts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>No Matching Arcs Found</h3>
+            <p>Try clearing your search query or switching your active filter controls.</p>
+            <button type="button" class="filter-btn active" id="resetFiltersEmptyBtn">
+              Reset Filters &amp; Search
+            </button>
+          </div>
+        `;
+        const resetEmptyBtn = document.getElementById("resetFiltersEmptyBtn");
+        if (resetEmptyBtn) {
+          resetEmptyBtn.addEventListener("click", () => {
+            appState.filterMode = "all";
+            appState.hideCompleted = false;
+            appState.searchQuery = "";
+            document.getElementById("searchInput").value = "";
+            document.getElementById("clearSearchBtn").classList.remove("visible");
+            savePrefsToStorage();
+            renderAll();
+          });
+        }
+      } else {
+        container.innerHTML = htmlParts.join("");
+      }
+
+      document.getElementById("visibleCountSummary").textContent =
+        `Showing ${visibleArcsCount} of ${totalArcsInSeries} arcs`;
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderSagaList();
+    }
+
+    /*************************************************************************
+     * EVENT LISTENERS & INTERACTIVITY
+     *************************************************************************/
+    function initEvents() {
+      // Series Tab Switching
+      const tabsContainer = document.getElementById("seriesTabs");
+      tabsContainer.addEventListener("click", (e) => {
+        const btn = e.target.closest(".series-tab");
+        if (!btn) return;
+        const selectedSeries = btn.getAttribute("data-series");
+        if (!selectedSeries || selectedSeries === appState.activeSeries) return;
+
+        appState.activeSeries = selectedSeries;
+        document.querySelectorAll(".series-tab").forEach((t) => {
+          t.classList.toggle("active", t.getAttribute("data-series") === selectedSeries);
+        });
+        savePrefsToStorage();
+        renderAll();
+      });
+
+      // Fate Route Switching
+      document.getElementById("routeBtnUbw").addEventListener("click", () => {
+        if (appState.fateRoute !== "ubw") {
+          appState.fateRoute = "ubw";
+          savePrefsToStorage();
+          renderAll();
+        }
+      });
+
+      document.getElementById("routeBtnZero").addEventListener("click", () => {
+        if (appState.fateRoute !== "zero") {
+          appState.fateRoute = "zero";
+          savePrefsToStorage();
+          renderAll();
+        }
+      });
+
+      // Filter Controls: Show All vs Canon Only
+      document.getElementById("filterAllBtn").addEventListener("click", () => {
+        appState.filterMode = "all";
+        savePrefsToStorage();
+        renderAll();
+      });
+
+      document.getElementById("filterCanonBtn").addEventListener("click", () => {
+        appState.filterMode = appState.filterMode === "canon" ? "all" : "canon";
+        savePrefsToStorage();
+        renderAll();
+      });
+
+      // Filter Control: Hide Completed
+      document.getElementById("filterHideCompletedBtn").addEventListener("click", () => {
+        appState.hideCompleted = !appState.hideCompleted;
+        savePrefsToStorage();
+        renderAll();
+      });
+
+      // Instant Search Input
+      const searchInput = document.getElementById("searchInput");
+      const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+      searchInput.addEventListener("input", (e) => {
+        appState.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle("visible", appState.searchQuery.length > 0);
+        renderSagaList();
+      });
+
+      clearSearchBtn.addEventListener("click", () => {
+        appState.searchQuery = "";
+        searchInput.value = "";
+        clearSearchBtn.classList.remove("visible");
+        searchInput.focus();
+        renderSagaList();
+      });
+
+      // Bulk Check All Canon in Current Series
+      document.getElementById("markAllCanonBtn").addEventListener("click", () => {
+        const sagas = getSagasForSeries(appState.activeSeries);
+        sagas.forEach((saga) => {
+          saga.arcs.forEach((arc) => {
+            if (isArcCanonOrEssential(arc)) {
+              completedArcs.add(arc.id);
+            }
+          });
+        });
+        saveCompletedToStorage();
+        renderAll();
+      });
+
+      // Reset Progress for Current Series
+      document.getElementById("resetSeriesBtn").addEventListener("click", () => {
+        const currentTitle = ANIME_DATA[appState.activeSeries].title;
+        if (!window.confirm(`Reset all watched progress for ${currentTitle}?`)) return;
+        const sagas = getSagasForSeries(appState.activeSeries);
+        sagas.forEach((saga) => {
+          saga.arcs.forEach((arc) => completedArcs.delete(arc.id));
+        });
+        saveCompletedToStorage();
+        renderAll();
+      });
+
+      // Delegated Events inside Saga List Container (Checkboxes, Saga Collapse, Batch Saga Check)
+      const sagaContainer = document.getElementById("sagaListContainer");
+
+      sagaContainer.addEventListener("change", (e) => {
+        if (e.target.classList.contains("arc-checkbox")) {
+          const arcId = e.target.getAttribute("data-arc-id");
+          if (e.target.checked) {
+            completedArcs.add(arcId);
+          } else {
+            completedArcs.delete(arcId);
+          }
+          saveCompletedToStorage();
+          renderAll();
+        }
+      });
+
+      sagaContainer.addEventListener("click", (e) => {
+        // Batch Check/Uncheck Saga button
+        const batchBtn = e.target.closest("[data-saga-batch]");
+        if (batchBtn) {
+          e.stopPropagation();
+          const sagaId = batchBtn.getAttribute("data-saga-batch");
+          const sagas = getSagasForSeries(appState.activeSeries);
+          const targetSaga = sagas.find((s) => s.id === sagaId);
+          if (!targetSaga) return;
+
+          const allCompleted = targetSaga.arcs.every((a) => completedArcs.has(a.id));
+          targetSaga.arcs.forEach((a) => {
+            if (allCompleted) {
+              completedArcs.delete(a.id);
+            } else {
+              completedArcs.add(a.id);
+            }
+          });
+          saveCompletedToStorage();
+          renderAll();
+          return;
+        }
+
+        // Collapse / Expand Saga Header
+        const headerEl = e.target.closest("[data-saga-toggle]");
+        if (headerEl) {
+          const sagaId = headerEl.getAttribute("data-saga-toggle");
+          appState.collapsedSagas[sagaId] = !appState.collapsedSagas[sagaId];
+          savePrefsToStorage();
+          renderSagaList();
+        }
+      });
+    }
+
+    // Initialize Application
+    (function bootstrap() {
+      loadStateFromStorage();
+      // Sync active tab UI with loaded state
+      document.querySelectorAll(".series-tab").forEach((t) => {
+        t.classList.toggle("active", t.getAttribute("data-series") === appState.activeSeries);
+      });
+      initEvents();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
+
+```
